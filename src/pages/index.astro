@@ -1,5 +1,24 @@
 ---
+import { render } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
+import type { Palette, Sprite } from '../wadDataLoader';
+import '../styles/global.css';
 
+// Get all entries from a collection.
+// Requires the name of the collection as an argument.
+// const allDoomData = await getCollection('doomData');
+
+// Get a single entry from a collection.
+// Requires the name of the collection and `id`
+const palettesData: undefined | { data: { palettes: Palette[] }} = await getEntry('doomData', 'PLAYPAL');
+const trooa1Data: undefined | { data: { sprite: Sprite }} = await getEntry('doomData', 'TROOA1');
+
+function range(start: number, end: number, step: number = 1): number[] {
+  return Array.from(
+    { length: Math.floor((end - start) / step) + 1 },
+    (_, i) => start + i * step
+  );
+}
 ---
 
 <html lang="en">
@@ -11,7 +30,37 @@
 		<meta name="generator" content={Astro.generator} />
 		<title>Astro</title>
 	</head>
-	<body>
+	<body class="bg-neutral-900 text-white mx-auto max-w-screen-lg">
 		<h1>Astro</h1>
+		<div class="flex flex-col gap-8">
+		  <h2>TROOA1</h2>
+		  <pre>{ JSON.stringify(trooa1Data, null, 2) }</pre>
+		  { trooa1Data?.data.sprite.columnOffsets.map(() => {
+			const topDelta = trooa1Data.data.sprite.pixelBuffer.readInt8(0);
+			const length = trooa1Data.data.sprite.pixelBuffer.readInt8(1);
+
+			return (
+				<div class="flex flex-col">
+					{ range(0, topDelta).map(() => {
+						return <div class="size-1/2"/>;
+		  			})}
+				</div>
+			);
+		  })}
+		</div>
+
+		<div class="flex flex-col gap-8">
+		  <h2>PALETTES</h2>
+		  { palettesData?.data.palettes.map((paletteData, paletteIndex) => (
+			<div>
+			  <div>Palette {paletteIndex}</div>
+			  <div class="flex flex-wrap">
+			    { paletteData.map((colorData, colorIndex) => (
+                  <div class="size-4 border border-black" style={`background-color: rgb(${colorData.r}, ${colorData.g}, ${colorData.b})`} />
+			    ))}
+			  </div>
+			</div>
+		  ))}
+		</div>
 	</body>
 </html>
